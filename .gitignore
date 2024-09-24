@@ -1,0 +1,9 @@
+/Infinity/__pycache__/
+/Infinity/.ipynb_checkpoints/
+/Infinity/.ipynb_checkpoints/variables-checkpoint.env
+.ipynb_checkpoints/functions-checkpoint.py
+.ipynb_checkpoints/infinity-checkpoint.py
+__pycache__/correo.cpython-312.pyc
+__pycache__/functions.cpython-312.pyc
+__pycache__/infinity.cpython-312.pyc
+/Infinity/middlewares/.ipynb_checkpoints/ratelimit-checkpoint.py

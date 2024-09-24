@@ -1,0 +1,28 @@
+
+### Crear una restaurante con POST
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+  "username": "holi",
+  "email": "user@example.com"
+}
+
+### Recuperar todas los restaurantes
+POST http://localhost:8000/api/verify/token
+
+### Borrar una restaurante
+GET http://localhost:8000/items
+
+### Actualizar una restaurante
+POST http://localhost:8000/api/github/users
+Content-Type: application/json
+
+{
+  "country": "string",
+  "page": "string"
+}
+
+
+
+

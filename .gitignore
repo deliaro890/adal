@@ -7,7 +7,8 @@ __pycache__/correo.cpython-312.pyc
 __pycache__/functions.cpython-312.pyc
 __pycache__/infinity.cpython-312.pyc
 /Infinity/middlewares/.ipynb_checkpoints/ratelimit-checkpoint.py
-nova-cel-bot-sheets.json
-nova-cel-bot.json
-sheetaccount.json
+keys_g
+env2/
+.env
+
 

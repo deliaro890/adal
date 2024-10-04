@@ -17,9 +17,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-environ["GOOGLE_APPLICATION_CREDENTIALS"]="nova-cel-bot.json"
+environ["GOOGLE_APPLICATION_CREDENTIALS"]="/keys_g/nova-cel-bot.json"
 client = bigquery.Client()
-sa= gspread.service_account(filename='sheetaccount.json')
+sa= gspread.service_account(filename='/keys_g/sheetaccount.json')
 sh =sa.open("Registro Nova cel (Responses)")
 
 app = FastAPI()

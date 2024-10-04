@@ -9,12 +9,29 @@ from middlewares.ratelimit import  RateLimitingMiddleware
 from typing import Annotated
 from fastapi import Depends, Header, HTTPException
 
+from fastapi.middleware.cors import CORSMiddleware
+
 load_dotenv()
 app = FastAPI()
+
+origins = [
+    "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(auth_routes , prefix = "/api")
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello World!"}
 
 
 @app.get("/items/")

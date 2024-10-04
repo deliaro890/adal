@@ -20,13 +20,36 @@ import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
 from functions_jwt import validate_token
+import os
 
-environ["GOOGLE_APPLICATION_CREDENTIALS"]="../nova-cel-bot.json"
-client = bigquery.Client()
-#sa= gspread.service_account(filename='../sheetaccount.json')
-#sh =sa.open("Registro Nova cel (Responses)")
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
+    "http://localhost:8080"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Cargar el archivo .env
+load_dotenv()
+
+#environ["GOOGLE_APPLICATION_CREDENTIALS"]="../keys_g/nova-cel-bot.json"
+credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
+client = bigquery.Client.from_service_account_json(credentials_path_1)
+#client = bigquery.Client()
+#sa= gspread.service_account(filename='../keys_g/sheetaccount.json')
+#sh =sa.open("Registro Nova cel (Responses)")
 
 # %%
 #client.close()

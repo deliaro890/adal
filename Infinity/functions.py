@@ -9,6 +9,15 @@ import correo
 from fastapi.responses import JSONResponse
 from functions_jwt import write_token
 
+import os
+from dotenv import load_dotenv
+# Cargar el archivo .env
+load_dotenv()
+
+
+#credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
+#cliente = bigquery.Client.from_service_account_json(credentials_path_1)
+
 table_id_users= "nova-cel.loyallty.users"
 table_id_codes_email = "nova-cel.loyallty.codes_email"
 table_id_transact = "nova-cel.loyallty.transact"
@@ -31,6 +40,8 @@ class Usuario(BaseModel):
 
 
 def create_user (diccionario : dict , client : bigquery.client.Client ) :
+#def create_user (diccionario : dict , client: cliente ) :
+    print("Cliente!: ",client)
     "Create a new user not use date_time_creation neither id "
     #df = pd.DataFrame(columns=['date_time_creation','email','name','last_name','age','country_lada','phone','gender','url_avatar','id','password'])
 

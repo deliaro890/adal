@@ -1,11 +1,21 @@
+###
+GET http://localhost:8000
 
-### Crear una restaurante con POST
-POST http://localhost:8000/api/login
+
+### Crear un user
+POST http://localhost:8000/crea_nuevo_usuario
 Content-Type: application/json
 
 {
-  "username": "holi",
-  "email": "user@example.com"
+  "email": "del@del.com",
+  "name": "del",
+  "last_name": "del",
+  "age": 37,
+  "country_lada": "053",
+  "phone": "053",
+  "gender": "F",
+  "url_avatar": "http://www.avatars/avatar.png",
+  "password": "Hola123!"
 }
 
 ### Recuperar todas los restaurantes
@@ -22,6 +32,13 @@ Content-Type: application/json
   "country": "string",
   "page": "string"
 }
+
+### Actualizar una restaurante
+POST http://localhost:8000/crea_nuevo_usuario/
+Content-Type: application/json
+
+
+
 
 
 

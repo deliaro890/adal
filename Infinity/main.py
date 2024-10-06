@@ -16,6 +16,7 @@ app = FastAPI()
 
 origins = [
     "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
+     "http://localhost:8080"
 ]
 
 app.add_middleware(

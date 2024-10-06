@@ -29,8 +29,10 @@ app = FastAPI()
 
 origins = [
     "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "http://127.0.0.1:8080"
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -134,8 +136,15 @@ def create_new_user ( datos : Usuario):
     })
 
 
-    return create_user(diccionario,client)
-     
+    return create_user(diccionario,client) 
+
+@app.post("/return_user")
+async def return__user(datos : Correo):
+    """Retorna todos los datos de un user, dado su email"""
+    datos_ = await datos.json()
+    return return_user(datos['email'], client)
+
+
 @app.put("/actualiza_usuario")
 def update__user ( datos : Usuario):
     """Actualiza un usuario dado un correo, todos los campos son requeridos 
@@ -178,7 +187,7 @@ async def add_pays(datos : Correo):
     
     return add_pay_position(datos['email'], client)
 
-@app.get("/login_user")
+@app.post("/login_user")
 async def login(datos : Login) :
     """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos"""
     datos = datos.dict()

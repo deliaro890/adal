@@ -617,7 +617,21 @@ def info_user_by_id ( id : int , client : bigquery.client.Client ):
                 return JSONResponse (content = df2.to_dict() , status_code = 200)   #si hay usuarios regresa el id del útimo 
     except :
         return JSONResponse (content = {"message" : "algo salio mal en la consulta ", "log ": traceback.format_exc()} , status_code = 500)
-         
+
+
+def return_user ( email : str, client : bigquery.client.Client ):
+    
+    if not validate_email (email):
+        return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
+
+    if not validate_exist(email, client) :
+        return JSONResponse (content = {"message": "correo {} no encontrado" .format (email) } , status_code = 404 )
+    
+    return JSONResponse (content = {"message": "correo {} existe!" .format (email) }, status_code = 200)
+
+
+   
+
 
     
 

@@ -7,8 +7,10 @@ __pycache__/correo.cpython-312.pyc
 __pycache__/functions.cpython-312.pyc
 __pycache__/infinity.cpython-312.pyc
 /Infinity/middlewares/.ipynb_checkpoints/ratelimit-checkpoint.py
-keys_g
-env2/
-.env
+/Infinity/env2/
+/infinity/.env
+/Infinity/api.http
+/Infinity/keys_g
+/bin/
 
 

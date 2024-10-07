@@ -33,7 +33,8 @@ origins = [
     "http://80.233.48.17:8080", # ip publica de mi mac
     "http://80.233.48.17",
     "http://172.20.10.2", # ip de mi mac de mi red local
-    "http://172.20.10.15"
+    "http://172.20.10.15",
+    "*"
 ]
 
 

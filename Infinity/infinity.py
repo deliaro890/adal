@@ -30,7 +30,10 @@ app = FastAPI()
 origins = [
     "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
     "http://localhost:8080",
-    "http://127.0.0.1:8080"
+    "http://80.233.48.17:8080", # ip publica de mi mac
+    "http://80.233.48.17",
+    "http://172.20.10.2", # ip de mi mac de mi red local
+    "http://172.20.10.15"
 ]
 
 

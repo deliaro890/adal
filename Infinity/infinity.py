@@ -31,11 +31,19 @@ origins = [
     "http://172.20.10.2:8080",  # La dirección de tu frontend Vuestic
     "http://172.20.10.2",
     "http://localhost:8080",
+    "http://127.0.0.1:8080", # no lo toma igual que el localhost!
     "http://localhost",
     "http://80.233.48.17:8080", # ip publica de mi mac
     "http://80.233.48.17",
     "http://172.20.10.2", # ip de mi mac de mi red local
-    "http://172.20.10.15"
+    "http://172.20.10.15",
+    "http://172.17.0.1",
+    "http://vuestic-app:8080",
+    "http://vuestic-app",
+    "http://vuestic-app_1:8080",
+    "http://vuestic-app_1",
+    "http://187.191.36.188:8080",
+    
 ]
 
 
@@ -140,7 +148,6 @@ def create_new_user ( datos : Usuario):
         "password" : datos.password    
     })
 
-
     return create_user(diccionario,client) 
 
 @app.post("/return_user")
@@ -196,7 +203,7 @@ async def add_pays(datos : Correo):
 async def login(datos : Login) :
     """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos"""
     datos = datos.dict()
-   
+    
     return login_user(datos['email'],datos['password'], client)
 
 @app.post("/manda_codigo")

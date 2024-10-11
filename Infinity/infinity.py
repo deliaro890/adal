@@ -43,7 +43,8 @@ origins = [
     "http://vuestic-app_1:8080",
     "http://vuestic-app_1",
     "http://187.191.36.188:8080",
-    
+    "*"
+
 ]
 
 

@@ -3,19 +3,19 @@ GET http://localhost:8000
 
 
 ### Crear un user
-POST http://localhost:8000/crea_nuevo_usuario
+POST http://107.152.42.60:8000/crea_nuevo_usuario
 Content-Type: application/json
 
 {
-  "email": "del@del.com",
-  "name": "del",
-  "last_name": "del",
-  "age": 37,
-  "country_lada": "053",
-  "phone": "053",
-  "gender": "F",
-  "url_avatar": "http://www.avatars/avatar.png",
-  "password": "Hola123!"
+   "email": "inicio@correo.com",
+    "name": "Leo",
+    "last_name": "Leo",
+    "age": 31,
+    "country_lada": "00",
+    "phone": "051233",
+    "gender": "F",
+    "url_avatar": "http://www.avatars/avatar.png",
+    "password": "Hola123!"
 }
 
 ### Recuperar todas los restaurantes

@@ -13,9 +13,9 @@ from datetime import datetime ,timedelta
 from time import sleep
 import numpy
 from fastapi import FastAPI ,Request , Header
-from pydantic import BaseModel
 from typing import Optional
 from functions import *
+from models import Usuario, Correo, CorreoCode, Login, Ident
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
@@ -72,36 +72,6 @@ client = bigquery.Client.from_service_account_json(credentials_path_1)
 
 # Registra la función no la modifica
 
-class Usuario(BaseModel):
-    """Clase Creada de registros para validación de parametros de entrada"""
-    
-    email : str #correo
-    name : str# Nombre
-    last_name : str  #apellido
-    age : int #Edad
-    country_lada : str#lada del país 
-    phone : str# telefono
-    gender : str #genero
-    url_avatar : str # URL del avatar
-    password : str
-
-class Correo(Request):
-    """Clase Creada de registros para validación de parametros de entrada"""
-    email : str #correo
-
-class CorreoCode(Request):
-    """Clase Creada de registros para validación de parametros de entrada"""
-    email : str #correo
-    code : int 
-
-class Login(BaseModel):
-    """Clase Creada de registros para validación de parametros de entrada"""
-    email : str #correo
-    password : str
-
-class Ident(BaseModel,Request):
-    """Clase para las funciones que solo requiren id """
-    id : int
 
 def valida (request : Request):
     token = request.headers["Authorization"].split(" ")[1]
@@ -202,7 +172,71 @@ async def add_pays(datos : Correo):
 
 @app.post("/login_user")
 async def login(datos : Login) :
-    """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos"""
+    """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos
+
+    Input: {
+  "email": "string",
+  "password": "string"
+    }
+    
+    Output: {
+  "date_time_created": {
+    "0": "YYYY-MM-DDTHH:MM:SS.ssssss"
+  },
+  "email": {
+    "0": "string"
+  },
+  "name": {
+    "0": "string"
+  },
+  "last_name": {
+    "0": "string"
+  },
+  "age": {
+    "0": int
+  },
+  "country_lada": {
+    "0": "string"
+  },
+  "phone": {
+    "0": "string"
+  },
+  "gender": {
+    "0": "string H/M"
+  },
+  "url_avatar": {
+    "0": "url string"
+  },
+  "id": {
+    "0": int
+  },
+  "password": {
+    "0": "string"
+  },
+  "paid_positions": {
+    "0": int 
+  },
+  "email_verified": {
+    "0": null  #Not in use
+  },
+  "email_code": {
+    "0": null #Not in use
+  },
+  "Authorization": "string" #JWT token
+}  
+Status code 200
+
+Output 2 : {
+  "message": "correo <string> no encontrado"
+}
+Status code 404
+
+output 3 : {
+  "message": "contraseña invalida"
+}
+Status code 401
+
+    """
     datos = datos.dict()
     
     return login_user(datos['email'],datos['password'], client)

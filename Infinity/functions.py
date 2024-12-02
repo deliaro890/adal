@@ -179,7 +179,6 @@ def login_user ( email : str, password : str, client : bigquery.client.Client ):
     
     if not validate_email (email):
         return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
-        #return {"code": 500 , "message" : "correo invalido" }
 
     if not validate_exist(email, client) :
         return JSONResponse (content = {"message": "correo {} no encontrado" .format (email) } , status_code = 404 )

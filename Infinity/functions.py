@@ -69,10 +69,10 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
     try:
         query_job = client.query(query1)  # Make an API request
         query_job.result() #espera a que termine 
-        if query_job.done() :
-            return {"code": 200 , "message" : "New User Created with id : {}" .format (id) }
-    except Exception :
-        return {"code" : 500 , "message" : "Something wrong ", "log ": traceback.format_exc()}
+        if query_job.done():
+            return JSONResponse({"message": "New User Created with id : {}" .format (id) }, status_code = 200)
+    except Exception:
+        return JSONResponse({"message": "Something wrong ", "log ": traceback.format_exc()}, status_code = 400)
         
 
 def max_id_actual (client : bigquery.client.Client) :

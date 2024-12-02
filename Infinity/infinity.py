@@ -74,7 +74,10 @@ client = bigquery.Client.from_service_account_json(credentials_path_1)
 
 
 def valida (request : Request):
-    token = request.headers["Authorization"].split(" ")[1]
+    try:
+        token = request.headers["Authorization"].split(" ")[1]
+    except:
+        return JSONResponse(content={"message": "la peticion no tiene token"},status_code=400)
     print (token)
     if validate_token(token, True) == True:
         print("token valido")
@@ -88,12 +91,31 @@ def index():
     print("Servidor OK")
     return {"mensaje": "Servidor OK ve a http://127.0.0.1:8000/docs"}
 
+@app.post("/valida_token")
+def validar_token(datos : Request) :
+
+    return valida(datos)
 
 
 
 @app.post("/crea_nuevo_usuario")
 def create_new_user ( datos : Usuario):
-    """Ejemplo: {
+    """crea un nuevo usuario
+
+    INPUT: 
+    {
+  "email": "string",
+  "name": "string",
+  "last_name": "string",
+  "age": int,
+  "country_lada": "string" length max 4,
+  "phone": "string",
+  "gender": "string H/M",
+  "url_avatar": "string",
+  "password": "string"
+    }
+
+    Ejemplo:{
       "email": "algo@dominio.com",
       "name": "Fulanito",
       "last_name": "Perez",
@@ -102,22 +124,27 @@ def create_new_user ( datos : Usuario):
       "phone": "5571784852",
       "gender": "H",
       "url_avatar": "http://www.avatars/avatar.png",
-      "password": "Contraseña3*" 
+      "password": "Contraseña3*"
     }
     El date_time_created = fecha tiempo actual America/Mexico_City , el id y el paid_positions = 0 se ponen automaticamente
-    """
     
-    diccionario = ({
-        "email" : datos.email,
-        "name" : datos.name,
-        "last_name" : datos.last_name,
-        "age" : datos.age ,
-        "country_lada" : datos.country_lada,
-        "phone" : datos.phone,
-        "gender" : datos.gender,
-        "url_avatar" : datos.url_avatar,
-        "password" : datos.password    
-    })
+    OUTPUT:{
+  "message": "New User Created with id : <int>"
+    } status code :200
+
+    OUTPUT2: {
+  "message":"correo invalido"
+    } status code:400
+
+    OUTPUT3: {
+  "message": "correo <string> ya registrado"} status code:409
+
+     OUTPUT4: {
+  "message": "Something wrong ",
+  "log ": "string"} status code: 500
+    """
+
+    diccionario = datos.dict()
 
     return create_user(diccionario,client) 
 

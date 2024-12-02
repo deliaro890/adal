@@ -7,10 +7,18 @@ __pycache__/correo.cpython-312.pyc
 __pycache__/functions.cpython-312.pyc
 __pycache__/infinity.cpython-312.pyc
 /Infinity/middlewares/.ipynb_checkpoints/ratelimit-checkpoint.py
+Infinity/middlewares/__pycache__/ratelimit.cpython-310.pyc
 Infinity/env2/
-Infinity/.env
+
 Infinity/api.http
 Infinity/keys_g
 bin/
-nove-cel-bot2.json
+#Archivos de mac
+.DS_Store
+#credenciales
+Infinity/.env
+Infinity/nova-cel-bot2.json
+#ambiente virtual        
+Infinity/venv/
+
 

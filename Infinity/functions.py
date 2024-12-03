@@ -111,6 +111,7 @@ def validate_exist (correo : str ,client : bigquery.client.Client):
         raise #no se pudo completar el job
 
 def validate_email (email : str):
+    "valida estructura (sintaxis) de un correo."
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
     if (re.fullmatch(regex, email)) :
         return True
@@ -156,7 +157,7 @@ def update_user(diccionario : dict , client : bigquery.client.Client):
     """Actualiza los datos de un usuario se debe de enviar el dicionario completo """
 
     if not validate_exist(diccionario['email'], client) :
-        return JSONResponse (content = {"message": "correo {} no existe" .format (email) } , status_code = 409 )
+        return JSONResponse (content = {"message": "correo {} no existe" .format (diccionario['email']) } , status_code = 409 )
 
     query4= """ UPDATE `{}`  SET name = "{}", last_name = "{}", age = {} ,country_lada = "{}", phone = "{}", gender = "{}" , url_avatar = "{}", password = "{}" \
                 where email ="{}" """.format(table_id_users,  diccionario['name'] , diccionario['last_name'] , 
@@ -168,12 +169,12 @@ def update_user(diccionario : dict , client : bigquery.client.Client):
     try:
         query_job.result() #espera a que termine el job
         if query_job.done() :
-            return {"code" : 200, "message" : "usuario actualizado"  , "log" : str(query_job.dml_stats) }
+            return JSONResponse (content = { "message" : "usuario actualizado"  , "log" : str(query_job.dml_stats)}, status_code = 200 )
     
         else :
-           return {"code" : 500, "message" : "no se pudo actualizar" }  #si no pudo terminar la consulta
+           return JSONResponse (content = {"message" : "no se pudo actualizar" }, status_code = 500 ) #si no pudo terminar la consulta
     except :
-        return {"code" : 500 , "message" : "algo salio mal ", "log ": traceback.format_exc()}
+        return JSONResponse (content = {"message" : "algo salio mal ", "log ": traceback.format_exc()}, status_code = 500)
 
 def login_user ( email : str, password : str, client : bigquery.client.Client ):
     

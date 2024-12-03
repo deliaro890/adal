@@ -1,9 +1,3 @@
-# %%
-#ID_SHEET='1jOYfMBs1hXSHrcPTGCL6D-nCgRRbI7beDLV4VbfV_pU'
-#APIKEY='AIzaSyCjU9evRYuLBYWDPAZeMmrERb7pwm6rWqs'
-
-# %%
-import gspread
 import pandas  as pd
 from os import environ
 from google.cloud import bigquery
@@ -90,7 +84,7 @@ def valida (request : Request):
 def index():
     """Ruta principal"""
     print("Servidor OK")
-    return {"mensaje": "Servidor OK ve a http://127.0.0.1:8000/docs"}
+    return {"mensaje": "Servidor OK ve a http://127.0.0.1:8000/docs o al host:8000/docs"}
 
 @app.post("/valida_token")
 def validar_token(datos : Request) :
@@ -101,20 +95,22 @@ def validar_token(datos : Request) :
 
 @app.post("/crea_nuevo_usuario")
 def create_new_user ( datos : Usuario):
-    """crea un nuevo usuario
+    """crea un nuevo usuario.
 
-    INPUT: 
-    {
-  "email": "string",
-  "name": "string",
-  "last_name": "string",
-  "age": int,
-  "country_lada": "string" length max 4,
-  "phone": "string",
-  "gender": "string H/M",
-  "url_avatar": "string",
-  "password": "string"
-    }
+    No es una función asincrona porque cada usuario debe de poseer un único id
+
+        INPUT: 
+        {
+      "email": "string",
+      "name": "string",
+      "last_name": "string",
+      "age": int,
+      "country_lada": "string" length max 4,
+      "phone": "string",
+      "gender": "string H/M",
+      "url_avatar": "string",
+      "password": "string"
+        }
 
     Ejemplo:{
       "email": "algo@dominio.com",
@@ -142,7 +138,7 @@ def create_new_user ( datos : Usuario):
 
      OUTPUT4: {
   "message": "Something wrong ",
-  "log ": "string"} status code: 500
+  "log ": "string"} status code: 400 ó 500
     """
 
     diccionario = datos.dict()
@@ -157,41 +153,88 @@ async def return__user(datos : Correo):
 
 
 @app.put("/actualiza_usuario")
-def update__user ( datos : Usuario):
-    """Actualiza un usuario dado un correo, todos los campos son requeridos 
-      Ejemplo: { \
-      "email": "algo@dominio.com", \
-      "name": "Fulanito", \
-      "last_name": "Perez", \
-      "age": 33, \
-      "country_lada": "+52", \
-      "phone": "5571784852", \
-      "gender": "H", \
-      "url_avatar": "http://www.avatars/avatar.png", \
-      "password": "Contraseña3*"  \
+async def update__user ( datos : Usuario2):
+    """Actualiza un usuario dado un correo, todos los campos son requeridos
+
+        INPUT: {
+        "email": "string",
+        "name": "string",
+        "last_name": "string",
+        "age": int,
+        "country_lada": "string" length max 4,
+        "phone": "string",
+        "gender": "string H/M",
+        "url_avatar": "string",
+        "password": "string"
+          }
+
+    Ejemplo: { \
+    "email": "algo@dominio.com", \
+    "name": "Fulanito", \
+    "last_name": "Perez", \
+    "age": 33, \
+    "country_lada": "+52", \
+    "phone": "5571784852", \
+    "gender": "H", \
+    "url_avatar": "http://www.avatars/avatar.png", \
+    "password": "Contraseña3*"  \
     } \
+    Header "Authorization": "string" #JWT token, el token te lo da el login
     El date_time_created , el id y el paid_positions no se actualizan
+
+    OUTPUT: {"message": "usuario actualizado", \
+    "log": "DmlStats(inserted_row_count=0, deleted_row_count=0, updated_row_count=2)"} status code : 200 \
+    
+    OUTPUT2:{"message": "la peticion no tiene token"}, status code: 400 \
+    
+    OUTPUT3:{"mesage": "Invalid Token"} , status_code : 401 \
+    
+    OUTPUT4:{"mesage": "Token Expired"} , status_code = 401 \
+    
+    OUTPUT5:{"message": "correo <string> no existe"} status_code = 409\
+    
+    OUTPUT6:{"message": "correo invalido"} , status_code = 400 \
+    
+    OUTPUT7:{"message" : "no se pudo actualizar" }, status_code = 500  \
+    
+    OUTPUT8:{"message" : "algo salio mal ", "log ": <string>}, status_code = 500 \
+
+
     """
     
-    diccionario = ({
-        "email" : datos.email,
-        "name" : datos.name,
-        "last_name" : datos.last_name,
-        "age" : datos.age ,
-        "country_lada" : datos.country_lada,
-        "phone" : datos.phone,
-        "gender" : datos.gender,
-        "url_avatar" : datos.url_avatar,
-        "password" : datos.password    
-    })
-
-
-    return update_user(diccionario,client)
+    print(datos)
+    if  valida(datos) != None :
+        return  valida(datos)
+    datos = await datos.json() 
+    diccionario =datos
+    print(diccionario)
+    return  update_user(diccionario,client)
 
 
 @app.patch("/agregar_pago")
 async def add_pays(datos : Correo):
-    """ se require el correo ejemplo  {"email": "fulanito@dominio.com"} , es para agregar pagos """
+    """ Agrega pago en la base de datos.
+
+          INPUT:{"email": "string"}
+          Header "Authorization": "string" #JWT token, el token se obtiene en el login
+
+    OUTPUT:{
+    "message": "pago de posición agregado a cliente",
+    "log": "string""
+    } status code = 200
+
+    OUTPUT2:{"message": "la peticion no tiene token"}, status code: 400 
+    
+    OUTPUT3:{"mesage": "Invalid Token"} , status_code : 401 
+
+    OUTPUT4:{"mesage": "Token Expired"} , status_code = 401 
+
+    OUTPUT5:{"message": "correo <string> no encontrado"} status_code = 404
+
+    OUTPUT6:{"message": "correo invalido"} , status_code = 400 
+
+    OUTPUT7:{"message" : "Something wrong", "log ": <string>}, status_code = 500 
+        """
     if valida(datos) != None :
         return  valida (datos)        
     datos = await datos.json()
@@ -203,11 +246,11 @@ async def login(datos : Login) :
     """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos
 
     Input: {
-  "email": "string",
-  "password": "string"
-    }
+    "email": "string",
+    "password": "string"
+      }
     
-    Output: {
+  Output: {
   "date_time_created": {
     "0": "YYYY-MM-DDTHH:MM:SS.ssssss"
   },
@@ -328,9 +371,177 @@ def new_block_structure(datos : Ident2):
    #print( datos['id'] )
     return insert_new_structure( datos['id'] , client )
 
-@app.get("/user_info")
+@app.get("/user_info_structure")
 async def user_info(datos : Ident ):
-    """ Regresa todos los datos de la estructura / transacciones del usuario dado su id """
+    """ Regresa todos los datos de la estructura del usuario dado su id para mayor referencia consute el grafico  https://lookerstudio.google.com/reporting/1b848ddf-958a-4fcb-a0e3-fe37c634a81e
+        INPUT: {"id": int }
+         "Authorization": "string" #JWT
+
+      OUTPUT:{
+    "ID": dict[int],
+    "position": dict[int],
+    "name": dict[string],
+    "email": dict[string],
+    "B": dict[int],
+    "C": dict[int],
+    "D": dict[int],
+    "E": dict[int],
+    "F": dict[int],
+    "G": dict[int],
+    "uplineID": dict[int],
+    "avatar_A": dict[string],
+    "nombre_B": dict[string],
+    "avatar_B": dict[string],
+    "nombre_C": dict[string],
+    "avatar_C": dict[string],
+    "nombre_D": dict[string],
+    "avatar_D": dict[string],
+    "nombre_E":dict[string],
+    "avatar_E": dict[string],
+    "nombre_F": dict[string],
+    "avatar_F": dict[string],
+    "nombre_G": dict[string],
+    "avatar_G": dict[string]
+    } status code : 200
+
+    Ejemplo de salida correcta, la persona tiene 2 posiciones :
+      {
+    "ID": {
+        "0": 3,
+        "1": 3
+    },
+    "position": {
+        "0": 2,
+        "1": 9
+    },
+    "name": {
+        "0": "Miguel",
+        "1": "Miguel"
+    },
+    "email": {
+        "0": "Miguel@gmail.com",
+        "1": "Miguel@gmail.com"
+    },
+    "B": {
+        "0": 5,
+        "1": 2
+    },
+    "C": {
+        "0": 5,
+        "1": 2
+    },
+    "D": {
+        "0": 6,
+        "1": null
+    },
+    "E": {
+        "0": 3,
+        "1": null
+    },
+    "F": {
+        "0": 5,
+        "1": null
+    },
+    "G": {
+        "0": 5,
+        "1": null
+    },
+    "uplineID": {
+        "0": 6,
+        "1": 5
+    },
+    "avatar_A": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_B": {
+        "0": "Deya",
+        "1": "Araceli"
+    },
+    "avatar_B": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_C": {
+        "0": "Deya",
+        "1": "Araceli"
+    },
+    "avatar_C": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_D": {
+        "0": "Diego",
+        "1": null
+    },
+    "avatar_D": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_E": {
+        "0": "Miguel",
+        "1": null
+    },
+    "avatar_E": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_F": {
+        "0": "Deya",
+        "1": null
+    },
+    "avatar_F": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_G": {
+        "0": "Deya",
+        "1": null
+    },
+    "avatar_G": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    }
+}
+
+OUTPUT2:{
+    "ID": {},
+    "position": {},
+    "name": {},
+    "email": {},
+    "B": {},
+    "C": {},
+    "D": {},
+    "E": {},
+    "F": {},
+    "G": {},
+    "uplineID": {},
+    "avatar_A": {},
+    "nombre_B": {},
+    "avatar_B": {},
+    "nombre_C": {},
+    "avatar_C": {},
+    "nombre_D": {},
+    "avatar_D": {},
+    "nombre_E": {},
+    "avatar_E": {},
+    "nombre_F": {},
+    "avatar_F": {},
+    "nombre_G": {},
+    "avatar_G": {}
+}, status code: 404 
+    
+OUTPUT3:{"message" : "algo salio mal en la consulta ", "log ": "string"} , status_code = 500 
+
+OUTPUT4:{"message": "la peticion no tiene token"}, status code: 400 
+
+OUTPUT5:{"mesage": "Invalid Token"} , status_code : 401
+
+OUTPUT6:{"mesage": "Token Expired"} , status_code = 401 
+
+
+
+    """
     if valida(datos) != None :
         return  valida (datos)
 
@@ -350,89 +561,3 @@ async def user_info(datos : Ident ):
 
 app.add_middleware(RateLimitingMiddleware)
 
-
-#def login(datos : Login):
-
-#    diccionario = ({
-#        "email" : datos.email,
-#        "password" : datos.password    
-#    })
-
-#    return login_user(diccionario['email'], diccionario['password'], client)
-
-
-
-   
-# %%
-#insert_new_transact(n)
-
-
-
-# %%
-#print('Bienvenido')
-#while True:
-#    option=input('seleccione una opcion \n 1 : Actualizar Base de Usuarios \n 2 : Crear Estructura de usuarios \
-#    \n 3 : Asociar usuarios \n 4 : Break Away de Usuario \n ' )
-#    
-#    if int(option) == 1:
-#        update_users() 
-#    elif int(option) == 2:
-#        insert_new_transact()
-#    elif int(option) == 3:
-#        update_transact()
-#    elif int(option) == 4:
-#        break_away()
-    
-
-# %%
-#break_away()
-
-
-
-# %%
-#pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
-
-# %%
-#pip install google_spreadsheet
-
-
-# %%
-#pip install google-auth-oauthlib
-
-
-# %%
-#pip install gspread
-
-
-# %%
-#pip install google-cloud-bigquery
-
-# %%
-#configurar con sudo jupyter serverextension enable --py jupyterlab --sys-prefix
-
-# %%
-# Activar en sercidor con 
-#jupyter lab --ip 0.0.0.0 --port 8888 --no-browser
-
-# %%
-#pip install db_dtypes
-
-# %%
-#pip install ipynb-py-convert
-
-# %%
-#pip install fastapi
-
-# %%
-#pip install "uvicorn[standard]"
-
-# %%
-#pip install jupyterlab-gitlab
-
-# %%
-#pip install jupyterlab-git
-
-# %%
-#pip install ipynb-py-convert
-
-# %%

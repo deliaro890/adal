@@ -9,7 +9,7 @@ import numpy
 from fastapi import FastAPI ,Request , Header
 from typing import Optional
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2
+from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware

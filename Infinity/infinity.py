@@ -1,9 +1,3 @@
-# %%
-#ID_SHEET='1jOYfMBs1hXSHrcPTGCL6D-nCgRRbI7beDLV4VbfV_pU'
-#APIKEY='AIzaSyCjU9evRYuLBYWDPAZeMmrERb7pwm6rWqs'
-
-# %%
-import gspread
 import pandas  as pd
 from os import environ
 from google.cloud import bigquery
@@ -156,8 +150,11 @@ async def return__user(datos : Correo):
 
 
 @app.put("/actualiza_usuario")
-def update__user ( datos : Usuario):
+async def update__user ( datos : Usuario):
     """Actualiza un usuario dado un correo, todos los campos son requeridos 
+    INPUT: 
+
+
       Ejemplo: { \
       "email": "algo@dominio.com", \
       "name": "Fulanito", \
@@ -169,23 +166,29 @@ def update__user ( datos : Usuario):
       "url_avatar": "http://www.avatars/avatar.png", \
       "password": "Contraseña3*"  \
     } \
+    Header "Authorization": "string" #JWT token, el token te lo da el login
     El date_time_created , el id y el paid_positions no se actualizan
+
+    OUTPUT: {"message": "usuario actualizado", \
+    "log": "DmlStats(inserted_row_count=0, deleted_row_count=0, updated_row_count=2)"} status code : 200 \
+    OUTPUT2:{"message": "la peticion no tiene token"}, status code: 400 \
+    OUTPUT3:{"mesage": "Invalid Token"} , status_code : 401 \
+    OUTPUT4:{"mesage": "Token Expired"} , status_code = 401 \
+    OUTPUT5:{"message": "correo <string> no existe"} status_code = 409\
+    OUTPUT6:{"message": "correo invalido"} , status_code = 400 \
+    OUTPUT7:{"message" : "no se pudo actualizar" }, status_code = 500  \
+    OUTPUT8:{"message" : "algo salio mal ", "log ": <string>}, status_code = 500 \
+
+
     """
     
-    diccionario = ({
-        "email" : datos.email,
-        "name" : datos.name,
-        "last_name" : datos.last_name,
-        "age" : datos.age ,
-        "country_lada" : datos.country_lada,
-        "phone" : datos.phone,
-        "gender" : datos.gender,
-        "url_avatar" : datos.url_avatar,
-        "password" : datos.password    
-    })
-
-
-    return update_user(diccionario,client)
+    print(datos)
+    if  valida(datos) != None :
+        return  valida(datos)
+    datos = await datos.json() 
+    diccionario =datos
+    print(diccionario)
+    return  update_user(diccionario,client)
 
 
 @app.patch("/agregar_pago")
@@ -320,89 +323,3 @@ async def user_info(datos : Ident ):
 
 app.add_middleware(RateLimitingMiddleware)
 
-
-#def login(datos : Login):
-
-#    diccionario = ({
-#        "email" : datos.email,
-#        "password" : datos.password    
-#    })
-
-#    return login_user(diccionario['email'], diccionario['password'], client)
-
-
-
-   
-# %%
-#insert_new_transact(n)
-
-
-
-# %%
-#print('Bienvenido')
-#while True:
-#    option=input('seleccione una opcion \n 1 : Actualizar Base de Usuarios \n 2 : Crear Estructura de usuarios \
-#    \n 3 : Asociar usuarios \n 4 : Break Away de Usuario \n ' )
-#    
-#    if int(option) == 1:
-#        update_users() 
-#    elif int(option) == 2:
-#        insert_new_transact()
-#    elif int(option) == 3:
-#        update_transact()
-#    elif int(option) == 4:
-#        break_away()
-    
-
-# %%
-#break_away()
-
-
-
-# %%
-#pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
-
-# %%
-#pip install google_spreadsheet
-
-
-# %%
-#pip install google-auth-oauthlib
-
-
-# %%
-#pip install gspread
-
-
-# %%
-#pip install google-cloud-bigquery
-
-# %%
-#configurar con sudo jupyter serverextension enable --py jupyterlab --sys-prefix
-
-# %%
-# Activar en sercidor con 
-#jupyter lab --ip 0.0.0.0 --port 8888 --no-browser
-
-# %%
-#pip install db_dtypes
-
-# %%
-#pip install ipynb-py-convert
-
-# %%
-#pip install fastapi
-
-# %%
-#pip install "uvicorn[standard]"
-
-# %%
-#pip install jupyterlab-gitlab
-
-# %%
-#pip install jupyterlab-git
-
-# %%
-#pip install ipynb-py-convert
-
-# %%

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi import Request 
 
 
-class Usuario(BaseModel):
+class Usuario(BaseModel,Request):
     """Clase Creada de registros para validación de parametros de entrada"""
     
     email : str #correo

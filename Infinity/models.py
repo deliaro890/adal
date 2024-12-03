@@ -1,9 +1,22 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel 
 from fastapi import Request 
 
 
-class Usuario(BaseModel,Request):
+class Usuario(BaseModel):
+    """Clase Creada de registros para validación de parametros de entrada"""
+    
+    email : str #correo
+    name : str# Nombre
+    last_name : str  #apellido
+    age : int #Edad
+    country_lada : str#lada del país 
+    phone : str# telefono
+    gender : str #genero
+    url_avatar : str # URL del avatar
+    password : str
+
+class Usuario2(Request,BaseModel):
     """Clase Creada de registros para validación de parametros de entrada"""
     
     email : str #correo

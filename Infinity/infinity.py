@@ -9,7 +9,7 @@ import numpy
 from fastapi import FastAPI ,Request , Header
 from typing import Optional
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident
+from models import Usuario, Usuario2, Correo, CorreoCode, Login, Ident
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
@@ -83,7 +83,7 @@ def valida (request : Request):
 def index():
     """Ruta principal"""
     print("Servidor OK")
-    return {"mensaje": "Servidor OK ve a http://127.0.0.1:8000/docs"}
+    return {"mensaje": "Servidor OK ve a http://127.0.0.1:8000/docs o al host:8000/docs"}
 
 @app.post("/valida_token")
 def validar_token(datos : Request) :
@@ -96,18 +96,18 @@ def validar_token(datos : Request) :
 def create_new_user ( datos : Usuario):
     """crea un nuevo usuario
 
-    INPUT: 
-    {
-  "email": "string",
-  "name": "string",
-  "last_name": "string",
-  "age": int,
-  "country_lada": "string" length max 4,
-  "phone": "string",
-  "gender": "string H/M",
-  "url_avatar": "string",
-  "password": "string"
-    }
+        INPUT: 
+        {
+      "email": "string",
+      "name": "string",
+      "last_name": "string",
+      "age": int,
+      "country_lada": "string" length max 4,
+      "phone": "string",
+      "gender": "string H/M",
+      "url_avatar": "string",
+      "password": "string"
+        }
 
     Ejemplo:{
       "email": "algo@dominio.com",
@@ -135,7 +135,7 @@ def create_new_user ( datos : Usuario):
 
      OUTPUT4: {
   "message": "Something wrong ",
-  "log ": "string"} status code: 500
+  "log ": "string"} status code: 400 ó 500
     """
 
     diccionario = datos.dict()
@@ -150,33 +150,50 @@ async def return__user(datos : Correo):
 
 
 @app.put("/actualiza_usuario")
-async def update__user ( datos : Usuario):
-    """Actualiza un usuario dado un correo, todos los campos son requeridos 
-    INPUT: 
+async def update__user ( datos : Usuario2):
+    """Actualiza un usuario dado un correo, todos los campos son requeridos
 
+        INPUT: {
+        "email": "string",
+        "name": "string",
+        "last_name": "string",
+        "age": int,
+        "country_lada": "string" length max 4,
+        "phone": "string",
+        "gender": "string H/M",
+        "url_avatar": "string",
+        "password": "string"
+          }
 
-      Ejemplo: { \
-      "email": "algo@dominio.com", \
-      "name": "Fulanito", \
-      "last_name": "Perez", \
-      "age": 33, \
-      "country_lada": "+52", \
-      "phone": "5571784852", \
-      "gender": "H", \
-      "url_avatar": "http://www.avatars/avatar.png", \
-      "password": "Contraseña3*"  \
+    Ejemplo: { \
+    "email": "algo@dominio.com", \
+    "name": "Fulanito", \
+    "last_name": "Perez", \
+    "age": 33, \
+    "country_lada": "+52", \
+    "phone": "5571784852", \
+    "gender": "H", \
+    "url_avatar": "http://www.avatars/avatar.png", \
+    "password": "Contraseña3*"  \
     } \
     Header "Authorization": "string" #JWT token, el token te lo da el login
     El date_time_created , el id y el paid_positions no se actualizan
 
     OUTPUT: {"message": "usuario actualizado", \
     "log": "DmlStats(inserted_row_count=0, deleted_row_count=0, updated_row_count=2)"} status code : 200 \
+    
     OUTPUT2:{"message": "la peticion no tiene token"}, status code: 400 \
+    
     OUTPUT3:{"mesage": "Invalid Token"} , status_code : 401 \
+    
     OUTPUT4:{"mesage": "Token Expired"} , status_code = 401 \
+    
     OUTPUT5:{"message": "correo <string> no existe"} status_code = 409\
+    
     OUTPUT6:{"message": "correo invalido"} , status_code = 400 \
+    
     OUTPUT7:{"message" : "no se pudo actualizar" }, status_code = 500  \
+    
     OUTPUT8:{"message" : "algo salio mal ", "log ": <string>}, status_code = 500 \
 
 
@@ -205,11 +222,11 @@ async def login(datos : Login) :
     """ Regresa todos los datos del usuario siempre que exista su correo y contraseña en la base de datos
 
     Input: {
-  "email": "string",
-  "password": "string"
-    }
+    "email": "string",
+    "password": "string"
+      }
     
-    Output: {
+  Output: {
   "date_time_created": {
     "0": "YYYY-MM-DDTHH:MM:SS.ssssss"
   },

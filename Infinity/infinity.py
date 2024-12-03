@@ -100,7 +100,9 @@ def validar_token(datos : Request) :
 
 @app.post("/crea_nuevo_usuario")
 def create_new_user ( datos : Usuario):
-    """crea un nuevo usuario
+    """crea un nuevo usuario.
+
+    No es una función asincrona porque cada usuario debe de poseer un único id
 
     INPUT: 
     {
@@ -298,9 +300,177 @@ async def new_transact(datos : Ident):
     print( datos['id'] )
     return insert_new_transact( datos['id'] , client )
 
-@app.get("/user_info")
+@app.get("/user_info_structure")
 async def user_info(datos : Ident ):
-    """ Regresa todos los datos de la estructura / transacciones del usuario dado su id """
+    """ Regresa todos los datos de la estructura del usuario dado su id para mayor referencia consute el grafico  https://lookerstudio.google.com/reporting/1b848ddf-958a-4fcb-a0e3-fe37c634a81e
+        INPUT: {"id": int }
+         "Authorization": "string" #JWT
+
+      OUTPUT:{
+    "ID": dict[int],
+    "position": dict[int],
+    "name": dict[string],
+    "email": dict[string],
+    "B": dict[int],
+    "C": dict[int],
+    "D": dict[int],
+    "E": dict[int],
+    "F": dict[int],
+    "G": dict[int],
+    "uplineID": dict[int],
+    "avatar_A": dict[string],
+    "nombre_B": dict[string],
+    "avatar_B": dict[string],
+    "nombre_C": dict[string],
+    "avatar_C": dict[string],
+    "nombre_D": dict[string],
+    "avatar_D": dict[string],
+    "nombre_E":dict[string],
+    "avatar_E": dict[string],
+    "nombre_F": dict[string],
+    "avatar_F": dict[string],
+    "nombre_G": dict[string],
+    "avatar_G": dict[string]
+    } status code : 200
+
+    Ejemplo de salida correcta, la persona tiene 2 posiciones :
+      {
+    "ID": {
+        "0": 3,
+        "1": 3
+    },
+    "position": {
+        "0": 2,
+        "1": 9
+    },
+    "name": {
+        "0": "Miguel",
+        "1": "Miguel"
+    },
+    "email": {
+        "0": "Miguel@gmail.com",
+        "1": "Miguel@gmail.com"
+    },
+    "B": {
+        "0": 5,
+        "1": 2
+    },
+    "C": {
+        "0": 5,
+        "1": 2
+    },
+    "D": {
+        "0": 6,
+        "1": null
+    },
+    "E": {
+        "0": 3,
+        "1": null
+    },
+    "F": {
+        "0": 5,
+        "1": null
+    },
+    "G": {
+        "0": 5,
+        "1": null
+    },
+    "uplineID": {
+        "0": 6,
+        "1": 5
+    },
+    "avatar_A": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_B": {
+        "0": "Deya",
+        "1": "Araceli"
+    },
+    "avatar_B": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_C": {
+        "0": "Deya",
+        "1": "Araceli"
+    },
+    "avatar_C": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509"
+    },
+    "nombre_D": {
+        "0": "Diego",
+        "1": null
+    },
+    "avatar_D": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_E": {
+        "0": "Miguel",
+        "1": null
+    },
+    "avatar_E": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_F": {
+        "0": "Deya",
+        "1": null
+    },
+    "avatar_F": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    },
+    "nombre_G": {
+        "0": "Deya",
+        "1": null
+    },
+    "avatar_G": {
+        "0": "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d509",
+        "1": null
+    }
+}
+
+OUTPUT2:{
+    "ID": {},
+    "position": {},
+    "name": {},
+    "email": {},
+    "B": {},
+    "C": {},
+    "D": {},
+    "E": {},
+    "F": {},
+    "G": {},
+    "uplineID": {},
+    "avatar_A": {},
+    "nombre_B": {},
+    "avatar_B": {},
+    "nombre_C": {},
+    "avatar_C": {},
+    "nombre_D": {},
+    "avatar_D": {},
+    "nombre_E": {},
+    "avatar_E": {},
+    "nombre_F": {},
+    "avatar_F": {},
+    "nombre_G": {},
+    "avatar_G": {}
+}, status code: 404 
+    
+OUTPUT3:{"message" : "algo salio mal en la consulta ", "log ": "string"} , status_code = 500 
+
+OUTPUT4:{"message": "la peticion no tiene token"}, status code: 400 
+
+OUTPUT5:{"mesage": "Invalid Token"} , status_code : 401
+
+OUTPUT6:{"mesage": "Token Expired"} , status_code = 401 
+
+
+
+    """
     if valida(datos) != None :
         return  valida (datos)
 

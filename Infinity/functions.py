@@ -281,8 +281,8 @@ def get_next_position(client):
         raise
 
 
-def insert_new_transact(ID2 : int , client : bigquery.client.Client):
-    """Importante Usar Solo si el id de usuario ya pagó , genera la estructura lógica del usuario en la tabla de transacciones 
+def insert_new_structure(ID2 : int , client : bigquery.client.Client):
+    """Importante Usar Solo si el id de usuario ya pagó , genera la estructura lógica del usuario en la tabla de transacciones/estructuras 
     ID2 es el usuario que entra
     ID es el usuario que ya está dentro y se le asocia debajo el usuario que entra"""
 
@@ -309,6 +309,7 @@ def insert_new_transact(ID2 : int , client : bigquery.client.Client):
             print('... Nuevo Registro Creado')
         else:
             print('El registro no se pudo crear ')
+            return JSONResponse (content =  {"message" :"El registro no se pudo crear"}, status_code = 500 )
 
 
     elif len(df3)==0:
@@ -327,7 +328,7 @@ def insert_new_transact(ID2 : int , client : bigquery.client.Client):
 
     print ("posicion entrante : {} \n id al que debe de asignarse id2: {} \n posicion al que debe de agregarse el id entrante {} ".format (position_id2, ID, str(position_id) ))
     
-    return update_transact(ID, ID2, position_id,position_id2,client )
+    return update_structure(ID, ID2, position_id,position_id2,client )
 
 def check_field_by_id_user(ID= None,field='name',table='users', client = None):
 
@@ -392,7 +393,7 @@ def set_upline(ID,ID2,position_id2,client):
         print('No se pudo Asociar el upline de {}'.format(ID2))
         return 1
 
-def update_transact(ID, ID2, position_id,position_id2,client ):
+def update_structure(ID, ID2, position_id,position_id2,client ):
     """Asocia en el registro de ID el usuario ID2
     df5 es el registo ID (es el upline de ID2)
     df7 es el registro ID2 (el que va entrando )
@@ -408,7 +409,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
 
     if df5.empty :
         print("El ID ingresado no tiene estructura favor de crearla")
-        return {"code" : 500 , "message" : "El ID ingresado no tiene estructura favor de crearla"}
+        return JSONResponse ( {"message" : "El ID ingresado no tiene estructura favor de crearla"}, status_code =409  )
     
     query7="""SELECT ID, B,C, upline FROM `{}` where ID={} AND position = {} """.format(table_id_transact, ID2 ,position_id2)
     query_job = client.query(query7)  # Make an API request.
@@ -420,11 +421,11 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
 
         if df5['B'].isnull().values[0]== False and df5['C'].isnull().values[0]== False:
             print("El usuario {} ya tiene asociados a los usuarios {} y {} , termine su ciclo para iniciar uno nuevo".format(df5['ID'].values[0],df5['B'].values[0],df5['C'].values[0]))
-            return {"code" : 500 , "message" : "El usuario {} ya tiene asociados a los usuarios {} y {} , termine su ciclo para iniciar uno nuevo".format(df5['ID'].values[0],df5['B'].values[0],df5['C'].values[0]) }
+            return JSONResponse (content = {"message" : "El usuario {} ya tiene asociados a los usuarios {} y {} , termine su ciclo para iniciar uno nuevo".format(df5['ID'].values[0],df5['B'].values[0],df5['C'].values[0]) }, status_code = 500 )
         
         if df5['upline'].isnull().values[0] == True and position_id > 1:
             print('Por favor primero asocie al usuario {} a su upline'.format(df5['ID'].values[0]))
-            return {"code" : 500 , "message" : 'Por favor primero asocie al usuario {} a su upline'.format(df5['ID'].values[0])}
+            return JSONResponse (content = {"message" : 'Por favor primero asocie al usuario {} a su upline'.format(df5['ID'].values[0])}, status_code = 500 )
             
             
 
@@ -439,14 +440,14 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
         
         if result is not True :
             print("Error , El usuario con el ID: {} no se encuentra registrado en el registro de usuarios".format(ID2))
-            return {"code":500 , "message" : "Error , El usuario con el ID: {} no se encuentra registrado en el registro de usuarios".format(ID2) }
+            return  JSONResponse ( content = {"message" : "Error , El usuario con el ID: {} no se encuentra registrado en el registro de usuarios".format(ID2) }, status_code = 404 )
 
 
         if position_id2 > 3 :
             uplineID,result2=check_field_by_id_transact(ID,'upline',table_id_transact , position_id , client)
             if result2 is not True:
                 print("Error El usuario con el ID: {} no se encuentra registrado en el registro de estructura favor de agregarlo".format(ID2))
-                return {"code":500 , "message" : "Error El usuario con el ID: {} no se encuentra registrado en el registro de estructura favor de agregarlo".format(ID2) }
+                return JSONResponse ( content = { "message" : "Error El usuario con el ID: {} no se encuentra registrado en el registro de estructura favor de agregarlo".format(ID2) } , status_code = 404)
 
             position_uplineID,result3 = check_current_position_by_id (uplineID,table_id_transact, client)
         
@@ -461,7 +462,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
 
         if position_id2 == 1 :
             print ("ok Done")
-            return {"code ":200 , "message": "ok Done" }
+            return JSONResponse ( {"message": "ok Done" }, status_code = 200)
             
 
         if df5['B'].isnull().values[0]== True  and df5['C'].isnull().values[0]== True:
@@ -477,7 +478,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                 print('... Nuevo Usuario Asociado en B')
             else:
                 print('El usuario no se pudo asociar ')
-                return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
         if df5['B'].isnull().values[0]== False  and df5['C'].isnull().values[0]== True:
             print("... asociando usuario en C")
@@ -491,16 +492,16 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                 print('... Nuevo Usuario Asociado en C')
             else:
                 print('El usuario no se pudo asociar ')
-                return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
             
             #acualizando en ID2 su ID de upline
         if set_upline(ID,ID2, position_id2,client)==1:
-            return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+            return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
         if position_id2 <= 3 :
             print ("ok Done")
-            return {"code ":200 , "message": "ok Done" }
+            return JSONResponse ( {"message": "ok Done" }, status_code = 200)
 
 
         if df8['D'].isnull().values[0]== True and df8['E'].isnull().values[0]== True and df8['F'].isnull().values[0]== True and df8['G'].isnull().values[0]== True:
@@ -513,7 +514,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                 print('... Nuevo Usuario Asociado en D')
             else:
                 print('El usuario no se pudo asociar ')
-                return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
         elif df8['D'].isnull().values[0]== False and df8['E'].isnull().values[0]== True and df8['F'].isnull().values[0]== True and df8['G'].isnull().values[0]== True :
             
@@ -525,7 +526,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                 print('... Nuevo Usuario Asociado en E')
             else:
                 print('El usuario no se pudo asociar ')
-                return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
         elif df8['D'].isnull().values[0]== False and df8['E'].isnull().values[0]== False and df8['F'].isnull().values[0]== True and df8['G'].isnull().values[0]== True :
             query7="""UPDATE `{}` SET F={} , date_time_updated=CURRENT_DATETIME("America/Mexico_City") where ID = {} and position = {} """.format(table_id_transact,ID2,uplineID, position_uplineID)
@@ -536,7 +537,7 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                 print('... Nuevo Usuario Asociado en F')
             else:
                 print('El usuario no se pudo asociar ')
-                return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
 
         elif df8['D'].isnull().values[0]== False and df8['E'].isnull().values[0]== False and df8['F'].isnull().values[0]== False and df8['G'].isnull().values[0]== True :
              
@@ -548,20 +549,20 @@ def update_transact(ID, ID2, position_id,position_id2,client ):
                  print('... Nuevo Usuario Asociado en G')
              else:
                  print('El usuario no se pudo asociar ')
-                 return {"code ":500 , "message": 'El usuario no se pudo asociar ' }
+                 return JSONResponse ( content = {"message": 'El usuario no se pudo asociar ' }, status_code =500 )
         
 
 
 
     elif len(df5)> 1 :
         print ("parece que hay más de un registro con el mismo id en la misma posicion , revise la base de datos !!!")
-        return {"code ":500 , "message": "parece que hay más de un registro con el mismo id en la misma posicion , revise la base de datos!!!"}
+        return JSONResponse ( content = {"message": "parece que hay más de un registro con el mismo id en la misma posicion , revise la base de datos!!!"} , status_code = 500)
     else:
         print('Usuario no encontrado en base de estructuras, favor de agregarlo')
-        return {"code ":500 , "message": 'Usuario no encontrado en base de estructuras, favor de agregarlo'}
+        return JSONResponse ( content = { "message": 'Usuario no encontrado en base de estructuras, favor de agregarlo'}, status_code=500 )
     
     print ("Ok Done")
-    return  {"code ":200 , "message": "Usuario asociado correctamente" }
+    return JSONResponse (content= {"message": "Usuario asociado correctamente" }, status_code = 200)
  
     
 def check_paids_positions (ID,client):

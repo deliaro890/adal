@@ -46,3 +46,7 @@ class Login(BaseModel):
 class Ident(BaseModel,Request):
     """Clase para las funciones que solo requiren id """
     id : int
+
+class Ident2(BaseModel):
+    """Clase para las funciones que solo requiren id """
+    id : int

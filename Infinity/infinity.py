@@ -15,12 +15,13 @@ import numpy
 from fastapi import FastAPI ,Request , Header
 from typing import Optional
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident
+from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
 from functions_jwt import validate_token
 import os
+from starlette.concurrency import run_in_threadpool
 
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -286,17 +287,46 @@ async def verifica (correocode : CorreoCode) :
     print (datos["email"] , datos["code"]) 
     return verify_code(datos["email"], datos["code"], client)
 
-@app.post("/agrega_transaccion")
-async def new_transact(datos : Ident):
-    """Una vez pagada su posición se le asigna un registro y se modifican aquiellos que estén vinvulados, 2 registros arriba en la estructura , solo requiere el id del usuario a entrar """
+@app.post("/agrega_estructura")
+def new_block_structure(datos : Ident2):
+    """Una vez pagada su posición se le asigna un registro (función insert_new_structure) 
+    y se modifican aquellos que estén vinvulados 2 registros arriba en la estructura (función update_structure),
+    solo requiere el id del usuario a entrar. 
+    Es una funcion sincrona porque se agregan a la estructura global de uno por uno.
+    No requiere token porque es lo que se debe de hacer automaticamente al pagar.
+
+    INPUT: {"id": int}
+
+    OUTPUT: {"message": "ok Done" }, status_code: 200 # Esto pasa con los primeras 3 posiciones 
+
+    OUTPUT2:{"message": "Usuario asociado correctamente"} status code : 200
+
+    OUTPUT3: {"message": "hay que pagar la posición primero"} status code : 402
+
+    OUTPUT : {"message" : "Error , El usuario con el ID: int no se encuentra registrado en el registro de usuarios" }, status_code = 404
+
+    OUTPUT4: { "message" : "Error El usuario con el ID: int no se encuentra registrado en el registro de estructura favor de agregarlo" }, status code: 404
+
+    OUTPUT5: {"message" : "El ID ingresado no tiene estructura favor de crearla"}, status_code : 409 
+
+    OUTPUT6: {"message" :"El registro no se pudo crear"}, status_code : 500
+
+    OUTPUT6: { "message": 'Usuario no encontrado en base de estructuras, favor de agregarlo'}, status_code:500
+
+    OUTPUT7:{"message" : "El usuario int ya tiene asociados a los usuarios int y int , termine su ciclo para iniciar uno nuevo"}, status_code : 500
+
+    OUTPUT8: {"message": "parece que hay más de un registro con el mismo id en la misma posicion , revise la base de datos!!!"} , status_code : 500
+
+    OUTPUT9: {"message": 'El usuario no se pudo asociar ' }, status_code :500  
+       
+    """
     #token = datos.headers["Authorization"].split(" ")[1]
     #print (token)
-    if valida(datos) != None :
-        return  valida (datos)
-        
-    datos = await datos.json()
-    print( datos['id'] )
-    return insert_new_transact( datos['id'] , client )
+    #if valida(datos) != None :
+    #    return  valida (datos)   
+    datos = datos.dict()
+   #print( datos['id'] )
+    return insert_new_structure( datos['id'] , client )
 
 @app.get("/user_info")
 async def user_info(datos : Ident ):

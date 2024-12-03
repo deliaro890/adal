@@ -190,7 +190,28 @@ def update__user ( datos : Usuario):
 
 @app.patch("/agregar_pago")
 async def add_pays(datos : Correo):
-    """ se require el correo ejemplo  {"email": "fulanito@dominio.com"} , es para agregar pagos """
+    """ Agrega pago en la base de datos.
+
+          INPUT:{"email": "string"}
+          Header "Authorization": "string" #JWT token, el token se obtiene en el login
+
+    OUTPUT:{
+    "message": "pago de posición agregado a cliente",
+    "log": "string""
+    } status code = 200
+
+    OUTPUT2:{"message": "la peticion no tiene token"}, status code: 400 
+    
+    OUTPUT3:{"mesage": "Invalid Token"} , status_code : 401 
+
+    OUTPUT4:{"mesage": "Token Expired"} , status_code = 401 
+
+    OUTPUT5:{"message": "correo <string> no encontrado"} status_code = 404
+
+    OUTPUT6:{"message": "correo invalido"} , status_code = 400 
+
+    OUTPUT7:{"message" : "Something wrong", "log ": <string>}, status_code = 500 
+        """
     if valida(datos) != None :
         return  valida (datos)        
     datos = await datos.json()

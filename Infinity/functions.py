@@ -8,12 +8,17 @@ from random import randint
 import correo
 from fastapi.responses import JSONResponse
 from functions_jwt import write_token
-
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from google.auth import exceptions
 import os
 from dotenv import load_dotenv
+
+
 # Cargar el archivo .env
 load_dotenv()
 
+CLIENT_ID= os.getenv("VUE_APP_CLIENT_ID")
 
 #credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
 #cliente = bigquery.Client.from_service_account_json(credentials_path_1)
@@ -200,6 +205,53 @@ def login_user ( email : str, password : str, client : bigquery.client.Client ):
                 return  output
     except :
         return JSONResponse (content = {"message" : "algo salio mal en max_id_actual" , "log" : traceback.format_exc() } , status_code = 500)
+
+
+def login_user_google ( token_google : str,client_id: str,  client : bigquery.client.Client ):
+    """Funcion para el login con google auth2 token.
+    No invoca a la función crear usuario pouque crear usuario es sincrona y esto alentaría el login,
+    porque todos los usuarios deben de tener un id único"""
+    try:
+        response=id_token.verify_oauth2_token(token, requests.Request(), client_id)
+        if response['email_verified']:
+            email=response['email']
+            #name=response['given_name']
+            #apellido = response['family_name']
+            #url_image=response['picture']
+        else:
+            print('verifica tu email')
+            return JSONResponse (content = {"message": "verifica tu email"} , status_code = 401 )
+            
+    except exceptions.InvalidValue as e:
+        print ( str(e) )
+        return JSONResponse (content = {"message": "valor invalido {}".format(str(e)) } , status_code = 400 )
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return JSONResponse (content = {"message": "algo salió mal en el token de google", "log": traceback.format_exc()} , status_code = 500 )
+    
+
+   
+    if not validate_email (email):
+        return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
+
+    if not validate_exist(email, client) :
+        token = write_token ( {"email" : email , "password" : client_id } )
+        return JSONResponse (content = {"Authorization":token, "message": "correo {} no encontrado".format (email) } , status_code = 404 )
+
+    query5 = """ SELECT * from `{}` where email = "{}" """.format(table_id_users,email)
+
+    try:
+        query_job = client.query(query5)  # Make an API request
+        query_job.result() #espera a que termine el job
+        if query_job.done() :
+            df2 = query_job.to_dataframe() #No puede estár vacio puesto que ya lo verificó anteriormente
+            output = df2.to_dict()
+            token = write_token ( {"email" : email , "password" : client_id } )
+            output["Authorization"] = token #regresa el token encriptado y los datos encontrados del usuario
+            return  JSONResponse (content = output , status_code = 200)
+    except :
+        return JSONResponse (content = {"message" : "algo salio mal " , "log" : traceback.format_exc() } , status_code = 500)
 
 
 def send_code ( email : str  , client : bigquery.client.Client) :

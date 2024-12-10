@@ -43,6 +43,9 @@ class Login(BaseModel):
     email : str #correo
     password : str
 
+class Login_Google(BaseModel):
+    token_google:str
+
 class Ident(BaseModel,Request):
     """Clase para las funciones que solo requiren id """
     id : int

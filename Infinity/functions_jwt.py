@@ -21,14 +21,19 @@ def write_token (data : dict):
 
 
 
-def validate_token(token , output = False ):
+def validate_token(token , email, output = False ):
     try :
         
         print ("decodificando")
         if output :
-            print (decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] ))
-            print ("decodificado")
-            return True
+            data = decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] )
+            print ("decodificado : ")
+            print (data)
+            if data['email'] ==email:
+                return True
+                
+            else :
+                return JSONResponse (content = {"mesage": "the token corresponds to another email"} , status_code = 401 )
         print (decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] ))
         print ("decodificado")
 

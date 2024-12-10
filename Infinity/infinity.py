@@ -9,7 +9,7 @@ import numpy
 from fastapi import FastAPI ,Request , Header
 from typing import Optional
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2
+from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2, Login_Google
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
@@ -74,11 +74,11 @@ def valida (request : Request):
     except:
         return JSONResponse(content={"message": "la peticion no tiene token"},status_code=400)
     print (token)
-    if validate_token(token, True) == True:
+    if validate_token(token, request['email'], True) == True:
         print("token valido")
         pass
     else:
-       return validate_token(token, True)
+       return validate_token(token,request['email'], True)
 
 @app.get("/")
 def index():
@@ -311,6 +311,87 @@ Status code 401
     datos = datos.dict()
     
     return login_user(datos['email'],datos['password'], client)
+
+@app.post("/login_user_google")
+async def login_google(datos : Login_Google) :
+    """ Regresa todos los datos del usuario y el JWT siempre que exista su correo en la base de datos
+    si no existe el usuairo entonces solo regresa wl JWT y el front lo debe de registrar usando el JWT obtenido usando /crea_nuevo_usuario
+
+    token_google : es el proporcionado por google    
+    client_id : es el proporcionado por google
+    
+
+    Input: {
+    "token_google": "string",
+    "client_id": "string"
+      }
+    
+  Output: {
+  "date_time_created": {
+    "0": "YYYY-MM-DDTHH:MM:SS.ssssss"
+  },
+  "email": {
+    "0": "string"
+  },
+  "name": {
+    "0": "string"
+  },
+  "last_name": {
+    "0": "string"
+  },
+  "age": {
+    "0": int
+  },
+  "country_lada": {
+    "0": "string"
+  },
+  "phone": {
+    "0": "string"
+  },
+  "gender": {
+    "0": "string H/M"
+  },
+  "url_avatar": {
+    "0": "url string"
+  },
+  "id": {
+    "0": int
+  },
+  "password": {
+    "0": "string"
+  },
+  "paid_positions": {
+    "0": int 
+  },
+  "email_verified": {
+    "0": null  #Not in use
+  },
+  "email_code": {
+    "0": null #Not in use
+  },
+  "Authorization": "string" #JWT token
+}  
+Status code 200
+
+OUTPUT 2 : {"message": "verifica tu email"} , status_code = 401 
+
+OUTPUT 3 : {"message": "valor invalido {}".format(str(e)) } , status_code = 400 )
+sucede cuando el token ha expirado u otro valor es invalido
+
+OUTPUT 4 : {"message": "algo salió mal en el token de google", "log": "string"} , status_code = 500 
+
+OUTPUT 5: {"message": "correo invalido"} , status_code = 400 , cuando la estructura del correo es invalida
+
+OUTPUT 6: {"Authorization":"string" #JWT token, "message": "correo string no encontrado}, status_code = 404 , el front debe de invocar a /crea_nuevo_usuario
+
+OUTPUT 7: {"message" : "algo salio mal " , "log" : string } , status_code = 500
+
+
+    """
+    datos = datos.dict()
+    
+    return login_user_google(datos['token_google'],datos['client_id'], client)
+
 
 @app.post("/manda_codigo")
 async def send_email_code(datos : Correo):

@@ -74,7 +74,7 @@ def valida (request : Request):
     except:
         return JSONResponse(content={"message": "la peticion no tiene token"},status_code=400)
     print (token)
-    if validate_token(token, request['email'], True) == True:
+    if validate_token(token, True) == True:
         print("token valido")
         pass
     else:

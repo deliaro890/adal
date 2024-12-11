@@ -44,7 +44,9 @@ class Login(BaseModel):
     password : str
 
 class Login_Google(BaseModel):
+    """clase para el token de google"""
     token_google:str
+    client_id : str
 
 class Ident(BaseModel,Request):
     """Clase para las funciones que solo requiren id """

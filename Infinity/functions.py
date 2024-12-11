@@ -18,11 +18,6 @@ from dotenv import load_dotenv
 # Cargar el archivo .env
 load_dotenv()
 
-CLIENT_ID= os.getenv("VUE_APP_CLIENT_ID")
-
-#credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
-#cliente = bigquery.Client.from_service_account_json(credentials_path_1)
-
 table_id_users= "nova-cel.loyallty.users"
 table_id_codes_email = "nova-cel.loyallty.codes_email"
 table_id_transact = "nova-cel.loyallty.transact"
@@ -212,15 +207,16 @@ def login_user_google ( token_google : str,client_id: str,  client : bigquery.cl
     No invoca a la función crear usuario pouque crear usuario es sincrona y esto alentaría el login,
     porque todos los usuarios deben de tener un id único"""
     try:
-        response=id_token.verify_oauth2_token(token, requests.Request(), client_id)
+        response=id_token.verify_oauth2_token(token_google, requests.Request(), client_id)
         if response['email_verified']:
             email=response['email']
-            #name=response['given_name']
-            #apellido = response['family_name']
-            #url_image=response['picture']
         else:
             print('verifica tu email')
             return JSONResponse (content = {"message": "verifica tu email"} , status_code = 401 )
+        
+        if response['aud'] !=  client_id:
+             return JSONResponse (content = {"message": "el token no corresponde al client_id" } , status_code = 400 )
+            
             
     except exceptions.InvalidValue as e:
         print ( str(e) )

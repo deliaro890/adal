@@ -48,6 +48,12 @@ class Login_Google(BaseModel):
     token_google:str
     client_id : str
 
+class Create_User_Google(BaseModel):
+    token_google:str
+    jwt : str
+    client_id : str
+
+
 class Ident(BaseModel,Request):
     """Clase para las funciones que solo requiren id """
     id : int

@@ -4,12 +4,11 @@ from google.cloud import bigquery
 #from random import random #Debug
 import  traceback
 from datetime import datetime ,timedelta 
-from time import sleep
 import numpy
 from fastapi import FastAPI ,Request , Header
 from typing import Optional
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2, Login_Google
+from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2, Login_Google, Create_User_Google
 import json
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
@@ -78,7 +77,7 @@ def valida (request : Request):
         print("token valido")
         pass
     else:
-       return validate_token(token,request['email'], True)
+       return validate_token(token, True)
 
 @app.get("/")
 def index():
@@ -94,35 +93,16 @@ def validar_token(datos : Request) :
 
 
 @app.post("/crea_nuevo_usuario")
-def create_new_user ( datos : Usuario):
+def create_new_user ( datos : Create_User_Google):
     """crea un nuevo usuario.
+
+    INPUT : {
+  "token_google": "string",
+  "jwt": "string"
+            }
 
     No es una función asincrona porque cada usuario debe de poseer un único id
 
-        INPUT: 
-        {
-      "email": "string",
-      "name": "string",
-      "last_name": "string",
-      "age": int,
-      "country_lada": "string" length max 4,
-      "phone": "string",
-      "gender": "string H/M",
-      "url_avatar": "string",
-      "password": "string"
-        }
-
-    Ejemplo:{
-      "email": "algo@dominio.com",
-      "name": "Fulanito",
-      "last_name": "Perez",
-      "age": 33,
-      "country_lada": "+52",
-      "phone": "5571784852",
-      "gender": "H",
-      "url_avatar": "http://www.avatars/avatar.png",
-      "password": "Contraseña3*"
-    }
     El date_time_created = fecha tiempo actual America/Mexico_City , el id y el paid_positions = 0 se ponen automaticamente
     
     OUTPUT:{
@@ -141,7 +121,41 @@ def create_new_user ( datos : Usuario):
   "log ": "string"} status code: 400 ó 500
     """
 
+    valida( datos)
+
     diccionario = datos.dict()
+
+    try:
+        response=id_token.verify_oauth2_token(diccionario['token_google'], requests.Request(), diccionario['client_id'])
+
+        if response['aud'] !=  diccionario['client_id']:
+             return JSONResponse (content = {"message": "el token no corresponde al client_id" } , status_code = 400 )
+            
+            
+    except exceptions.InvalidValue as e:
+        print ( str(e) )
+        return JSONResponse (content = {"message": "valor invalido {}".format(str(e)) } , status_code = 400 )
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return JSONResponse (content = {"message": "algo salió mal en el token de google", "log": traceback.format_exc()} , status_code = 500 )
+
+    #if response['email'] == 
+    
+
+    diccionario2={ 'email' : response['email'],
+    'name' : response['given_name'],
+    'last_name'  : response['family_name'],
+    'age' : None,
+    'country_lada' : None, 
+    'phone' : None,
+    'gender' : None ,
+    'url_avatar' : response ['picture'],
+    'password' : None}
+
+    return diccionario2
+
+
 
     return create_user(diccionario,client) 
 

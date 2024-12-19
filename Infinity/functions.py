@@ -1,7 +1,5 @@
 from pydantic import BaseModel
-import pandas  as pd
 from google.cloud import bigquery
-import json
 import traceback
 import re
 from random import randint
@@ -39,8 +37,8 @@ class Usuario(BaseModel):
     password : str
 
 
-def create_user (diccionario : dict , client : bigquery.client.Client ) :
-#def create_user (diccionario : dict , client: cliente ) :
+def create_user(diccionario : dict , client : bigquery.client.Client ):
+
     print("Cliente!: ",client)
     "Create a new user not use date_time_creation neither id "
     #df = pd.DataFrame(columns=['date_time_creation','email','name','last_name','age','country_lada','phone','gender','url_avatar','id','password'])
@@ -51,9 +49,14 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
     if not validate_email (diccionario['email']):
         return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
 
-    if validate_exist(diccionario['email'], client) :
-        return JSONResponse (content = {"message": "correo {} ya registrado" .format (diccionario['email']) } , status_code = 409 )
-        
+    if validate_exist(diccionario['email'], client):
+        return JSONResponse(
+            content={
+                "message": f"correo {diccionario['email']} ya registrado"
+            },
+            status_code=409,
+        )
+
 
     id = max_id_actual(client) + 1
 
@@ -61,7 +64,7 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
     (date_time_created,email,name,last_name,age,country_lada,phone,gender,url_avatar,id,password,paid_positions) \
     VALUES  (CURRENT_DATETIME("America/Mexico_City"), "{}","{}","{}",{},"{}","{}","{}","{}",{},"{}", 0 ) """
              .format(table_id_users, diccionario['email'], diccionario['name'] , diccionario['last_name'] , 
-                     str (diccionario['age']) , diccionario['country_lada'] , diccionario['phone'] , diccionario['gender'] ,  
+                      (diccionario['age']) , diccionario['country_lada'] , diccionario['phone'] , diccionario['gender'] ,  
                      diccionario['url_avatar'] , id , diccionario['password']) )
 
     print (query1)
@@ -70,7 +73,10 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
         query_job = client.query(query1)  # Make an API request
         query_job.result() #espera a que termine 
         if query_job.done():
-            return JSONResponse({"message": "New User Created with id : {}" .format (id) }, status_code = 200)
+            return JSONResponse(
+                {"message": f"New User Created with id : {id}"},
+                status_code=200,
+            )
     except Exception:
         return JSONResponse({"message": "Something wrong ", "log ": traceback.format_exc()}, status_code = 400)
         
@@ -220,20 +226,27 @@ def login_user_google ( token_google : str,client_id: str,  client : bigquery.cl
             
     except exceptions.InvalidValue as e:
         print ( str(e) )
-        return JSONResponse (content = {"message": "valor invalido {}".format(str(e)) } , status_code = 400 )
+        return JSONResponse (content = {"message": "valor invalido {}".format(str(e)) } , status_code = 401 )
     except Exception as e:
         print(e)
         print(traceback.format_exc())
         return JSONResponse (content = {"message": "algo salió mal en el token de google", "log": traceback.format_exc()} , status_code = 500 )
     
-
    
     if not validate_email (email):
         return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
+    
+    token = write_token ( {"email" : email , "password" : client_id } )
 
     if not validate_exist(email, client) :
-        token = write_token ( {"email" : email , "password" : client_id } )
-        return JSONResponse (content = {"Authorization":token, "message": "correo {} no encontrado".format (email) } , status_code = 404 )
+        datos= {
+            "token_google":token_google,
+            "jwt": token,
+            "client_id": client_id}
+        url = "http://localhost:8000/crea_nuevo_usuario"
+        response = requests.post(f"{url}", json=datos)
+
+        return JSONResponse (content = response.json(), status_code = response.status_code )
 
     query5 = """ SELECT * from `{}` where email = "{}" """.format(table_id_users,email)
 
@@ -243,7 +256,6 @@ def login_user_google ( token_google : str,client_id: str,  client : bigquery.cl
         if query_job.done() :
             df2 = query_job.to_dataframe() #No puede estár vacio puesto que ya lo verificó anteriormente
             output = df2.to_dict()
-            token = write_token ( {"email" : email , "password" : client_id } )
             output["Authorization"] = token #regresa el token encriptado y los datos encontrados del usuario
             return  JSONResponse (content = output , status_code = 200)
     except :

@@ -50,7 +50,7 @@ class Login_Google(BaseModel):
 
 class Create_User_Google(BaseModel):
     token_google:str
-    jwt : str
+    jwt: str
     client_id : str
 
 

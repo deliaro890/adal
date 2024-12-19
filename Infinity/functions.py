@@ -1,22 +1,20 @@
 from pydantic import BaseModel
-import pandas  as pd
 from google.cloud import bigquery
-import json
 import traceback
 import re
 from random import randint
 import correo
 from fastapi.responses import JSONResponse
 from functions_jwt import write_token
-
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from google.auth import exceptions
 import os
 from dotenv import load_dotenv
+
+
 # Cargar el archivo .env
 load_dotenv()
-
-
-#credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
-#cliente = bigquery.Client.from_service_account_json(credentials_path_1)
 
 table_id_users= "nova-cel.loyallty.users"
 table_id_codes_email = "nova-cel.loyallty.codes_email"
@@ -39,8 +37,8 @@ class Usuario(BaseModel):
     password : str
 
 
-def create_user (diccionario : dict , client : bigquery.client.Client ) :
-#def create_user (diccionario : dict , client: cliente ) :
+def create_user(diccionario : dict , client : bigquery.client.Client ):
+
     print("Cliente!: ",client)
     "Create a new user not use date_time_creation neither id "
     #df = pd.DataFrame(columns=['date_time_creation','email','name','last_name','age','country_lada','phone','gender','url_avatar','id','password'])
@@ -51,9 +49,14 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
     if not validate_email (diccionario['email']):
         return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
 
-    if validate_exist(diccionario['email'], client) :
-        return JSONResponse (content = {"message": "correo {} ya registrado" .format (diccionario['email']) } , status_code = 409 )
-        
+    if validate_exist(diccionario['email'], client):
+        return JSONResponse(
+            content={
+                "message": f"correo {diccionario['email']} ya registrado"
+            },
+            status_code=409,
+        )
+
 
     id = max_id_actual(client) + 1
 
@@ -61,7 +64,7 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
     (date_time_created,email,name,last_name,age,country_lada,phone,gender,url_avatar,id,password,paid_positions) \
     VALUES  (CURRENT_DATETIME("America/Mexico_City"), "{}","{}","{}",{},"{}","{}","{}","{}",{},"{}", 0 ) """
              .format(table_id_users, diccionario['email'], diccionario['name'] , diccionario['last_name'] , 
-                     str (diccionario['age']) , diccionario['country_lada'] , diccionario['phone'] , diccionario['gender'] ,  
+                      (diccionario['age']) , diccionario['country_lada'] , diccionario['phone'] , diccionario['gender'] ,  
                      diccionario['url_avatar'] , id , diccionario['password']) )
 
     print (query1)
@@ -70,7 +73,10 @@ def create_user (diccionario : dict , client : bigquery.client.Client ) :
         query_job = client.query(query1)  # Make an API request
         query_job.result() #espera a que termine 
         if query_job.done():
-            return JSONResponse({"message": "New User Created with id : {}" .format (id) }, status_code = 200)
+            return JSONResponse(
+                {"message": f"New User Created with id : {id}"},
+                status_code=200,
+            )
     except Exception:
         return JSONResponse({"message": "Something wrong ", "log ": traceback.format_exc()}, status_code = 400)
         
@@ -200,6 +206,60 @@ def login_user ( email : str, password : str, client : bigquery.client.Client ):
                 return  output
     except :
         return JSONResponse (content = {"message" : "algo salio mal en max_id_actual" , "log" : traceback.format_exc() } , status_code = 500)
+
+
+def login_user_google ( token_google : str,client_id: str,  client : bigquery.client.Client ):
+    """Funcion para el login con google auth2 token.
+    No invoca a la función crear usuario pouque crear usuario es sincrona y esto alentaría el login,
+    porque todos los usuarios deben de tener un id único"""
+    try:
+        response=id_token.verify_oauth2_token(token_google, requests.Request(), client_id)
+        if response['email_verified']:
+            email=response['email']
+        else:
+            print('verifica tu email')
+            return JSONResponse (content = {"message": "verifica tu email"} , status_code = 401 )
+        
+        if response['aud'] !=  client_id:
+             return JSONResponse (content = {"message": "el token no corresponde al client_id" } , status_code = 400 )
+            
+            
+    except exceptions.InvalidValue as e:
+        print ( str(e) )
+        return JSONResponse (content = {"message": "valor invalido {}".format(str(e)) } , status_code = 401 )
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return JSONResponse (content = {"message": "algo salió mal en el token de google", "log": traceback.format_exc()} , status_code = 500 )
+    
+   
+    if not validate_email (email):
+        return JSONResponse (content = {"message": "correo invalido"} , status_code = 400 )
+    
+    token = write_token ( {"email" : email , "password" : client_id } )
+
+    if not validate_exist(email, client) :
+        datos= {
+            "token_google":token_google,
+            "jwt": token,
+            "client_id": client_id}
+        url = "http://localhost:8000/crea_nuevo_usuario"
+        response = requests.post(f"{url}", json=datos)
+
+        return JSONResponse (content = response.json(), status_code = response.status_code )
+
+    query5 = """ SELECT * from `{}` where email = "{}" """.format(table_id_users,email)
+
+    try:
+        query_job = client.query(query5)  # Make an API request
+        query_job.result() #espera a que termine el job
+        if query_job.done() :
+            df2 = query_job.to_dataframe() #No puede estár vacio puesto que ya lo verificó anteriormente
+            output = df2.to_dict()
+            output["Authorization"] = token #regresa el token encriptado y los datos encontrados del usuario
+            return  JSONResponse (content = output , status_code = 200)
+    except :
+        return JSONResponse (content = {"message" : "algo salio mal " , "log" : traceback.format_exc() } , status_code = 500)
 
 
 def send_code ( email : str  , client : bigquery.client.Client) :

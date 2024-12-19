@@ -26,8 +26,9 @@ def validate_token(token , output = False ):
         
         print ("decodificando")
         if output :
-            print (decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] ))
-            print ("decodificado")
+            data = decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] )
+            print ("decodificado : ")
+            print (data)
             return True
         print (decode (token, key = os.getenv("SECRET") ,algorithms = ["HS256"] ))
         print ("decodificado")

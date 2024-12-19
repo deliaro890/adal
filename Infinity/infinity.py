@@ -1,21 +1,14 @@
 import pandas  as pd
-from os import environ
+#from os import environ
 from google.cloud import bigquery
-#from random import random #Debug
 import  traceback
-from datetime import datetime ,timedelta 
-from time import sleep
-import numpy
-from fastapi import FastAPI ,Request , Header
-from typing import Optional
+from fastapi import FastAPI ,Request 
 from functions import *
-from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2
-import json
+from models import Usuario, Correo, CorreoCode, Login, Ident, Ident2, Usuario2, Login_Google, Create_User_Google
 from fastapi.responses import JSONResponse
 from middlewares.ratelimit import  RateLimitingMiddleware
 from functions_jwt import validate_token
 import os
-from starlette.concurrency import run_in_threadpool
 
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,12 +51,6 @@ load_dotenv()
 #environ["GOOGLE_APPLICATION_CREDENTIALS"]="../keys_g/nova-cel-bot.json"
 credentials_path_1 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_1")
 client = bigquery.Client.from_service_account_json(credentials_path_1)
-#client = bigquery.Client()
-#sa= gspread.service_account(filename='../keys_g/sheetaccount.json')
-#sh =sa.open("Registro Nova cel (Responses)")
-
-# %%
-#client.close()
 
 # Registra la función no la modifica
 
@@ -76,7 +63,6 @@ def valida (request : Request):
     print (token)
     if validate_token(token, True) == True:
         print("token valido")
-        pass
     else:
        return validate_token(token, True)
 
@@ -94,39 +80,21 @@ def validar_token(datos : Request) :
 
 
 @app.post("/crea_nuevo_usuario")
-def create_new_user ( datos : Usuario):
-    """crea un nuevo usuario.
+def create_new_user( datos : Create_User_Google):
+    """crea un nuevo usuario, funcion usada por el mismo back es sincrona porque asi se deben de agregar nuevos usuarios a la base de datos
+
+    INPUT : {
+  "token_google": "string",
+  "jwt": "string", el JWT que regresa el login
+  "client_id" :"string"
+            }
 
     No es una función asincrona porque cada usuario debe de poseer un único id
 
-        INPUT: 
-        {
-      "email": "string",
-      "name": "string",
-      "last_name": "string",
-      "age": int,
-      "country_lada": "string" length max 4,
-      "phone": "string",
-      "gender": "string H/M",
-      "url_avatar": "string",
-      "password": "string"
-        }
-
-    Ejemplo:{
-      "email": "algo@dominio.com",
-      "name": "Fulanito",
-      "last_name": "Perez",
-      "age": 33,
-      "country_lada": "+52",
-      "phone": "5571784852",
-      "gender": "H",
-      "url_avatar": "http://www.avatars/avatar.png",
-      "password": "Contraseña3*"
-    }
-    El date_time_created = fecha tiempo actual America/Mexico_City , el id y el paid_positions = 0 se ponen automaticamente
+    El date_time_created = fecha tiempo actual America/Mexico_City , el id(unico e incremenrtal) y el paid_positions = 0 se ponen automaticamente
     
     OUTPUT:{
-  "message": "New User Created with id : <int>"
+  "message": "New User Created with id : int"
     } status code :200
 
     OUTPUT2: {
@@ -134,16 +102,47 @@ def create_new_user ( datos : Usuario):
     } status code:400
 
     OUTPUT3: {
-  "message": "correo <string> ya registrado"} status code:409
+  "message": "correo "string" ya registrado"} status code:409
 
      OUTPUT4: {
   "message": "Something wrong ",
   "log ": "string"} status code: 400 ó 500
     """
-
     diccionario = datos.dict()
 
-    return create_user(diccionario,client) 
+    if validate_token(diccionario["jwt"], True) == True:
+        print("token valido")
+    else:
+       return validate_token(diccionario["jwt"], True)
+
+
+    try:
+        response=id_token.verify_oauth2_token(diccionario['token_google'], requests.Request(), diccionario['client_id'])
+
+        if response['aud'] !=  diccionario['client_id']:
+             return JSONResponse (content = {"message": "el token no corresponde al client_id" } , status_code = 400 )
+
+
+    except exceptions.InvalidValue as e:
+        return JSONResponse(
+            content={"message": f"valor invalido {str(e)}"}, status_code=400
+        )
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        return JSONResponse (content = {"message": "algo salió mal en el token de google", "log": traceback.format_exc()} , status_code = 500 )
+
+    diccionario2={ 'email' : response['email'],
+    'name' : response['given_name'],
+    'last_name'  : response['family_name'],
+    'age' : 0,
+    'country_lada' : None, 
+    'phone' : None,
+    'gender' : "" ,
+    'url_avatar' : response ['picture'],
+    'password' : None}
+
+    return create_user(diccionario2,client) 
 
 @app.post("/return_user")
 async def return__user(datos : Correo):
@@ -311,6 +310,100 @@ Status code 401
     datos = datos.dict()
     
     return login_user(datos['email'],datos['password'], client)
+
+@app.post("/login_user_google")
+async def login_google(datos : Login_Google) :
+    """ Regresa todos los datos del usuario y el JWT siempre que exista su correo en la base de datos
+    si no existe el usuairo entonces  /crea_nuevo_usuario y las salidas son las correspondientes a la dicha funcion
+
+    token_google : es el proporcionado por google    
+    client_id : es el proporcionado por google
+
+
+    Input: {
+    "token_google": "string",
+    "client_id": "string"
+      }
+    
+  Output: {
+  "date_time_created": {
+    "0": "YYYY-MM-DDTHH:MM:SS.ssssss"
+  },
+  "email": {
+    "0": "string"
+  },
+  "name": {
+    "0": "string"
+  },
+  "last_name": {
+    "0": "string"
+  },
+  "age": {
+    "0": int
+  },
+  "country_lada": {
+    "0": "string"
+  },
+  "phone": {
+    "0": "string"
+  },
+  "gender": {
+    "0": "string H/M"
+  },
+  "url_avatar": {
+    "0": "url string"
+  },
+  "id": {
+    "0": int
+  },
+  "password": {
+    "0": "string"
+  },
+  "paid_positions": {
+    "0": int 
+  },
+  "email_verified": {
+    "0": null  #Not in use
+  },
+  "email_code": {
+    "0": null #Not in use
+  },
+  "Authorization": "string" #JWT token
+}  
+Status code 200
+
+OUTPUT 2 : {"message": "verifica tu email"} , status_code = 401 
+
+OUTPUT 3 : {"message": "valor invalido {}".format(str(e)) } , status_code = 401 )
+sucede cuando el token ha expirado u otro valor es invalido
+
+OUTPUT 4 : {"message": "algo salió mal en el token de google", "log": "string"} , status_code = 500 
+
+OUTPUT 5: {"message": "correo invalido"} , status_code = 400 , cuando la estructura del correo es invalida
+
+OUTPUT 6: {"Authorization":"string" #JWT token, "message": "correo string no encontrado}, status_code = 404 , el front debe de invocar a /crea_nuevo_usuario
+
+OUTPUT 7: {"message" : "algo salio mal " , "log" : string } , status_code = 500
+
+OUTPUT8:{
+"message": "New User Created with id : int"
+  } status code :200
+
+OUTPUT9: {
+"message":"correo invalido"
+  } status code:400
+
+OUTPUT10: {
+"message": "correo "string" ya registrado"} status code:409
+
+OUTPUT11: {
+"message": "Something wrong ",
+"log ": "string"} status code: 400 ó 500
+"""
+    datos = datos.dict()
+    
+    return login_user_google(datos['token_google'],datos['client_id'], client)
+
 
 @app.post("/manda_codigo")
 async def send_email_code(datos : Correo):
